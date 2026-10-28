@@ -64,6 +64,26 @@ are in [README.md](README.md).
 - Read [pyproject.toml](pyproject.toml) for dependency declarations and
   [LICENSE](LICENSE) for the Apache-2.0 terms.
 
+## Commit messages
+
+Every commit subject must be `<type>: <imperative summary>` with one of these
+types:
+
+| Type | Use for | Example |
+| --- | --- | --- |
+| `feat` | A new feature | `feat: add user login via OAuth` |
+| `fix` | A bug fix | `fix: correct null pointer exception in user service` |
+| `chore` | Build process or auxiliary tasks, no production code | `chore: update CI configuration` |
+| `docs` | Documentation only | `docs: update README with installation instructions` |
+| `style` | Formatting with no functional change | `style: format code with prettier` |
+| `refactor` | Code change that neither fixes a bug nor adds a feature | `refactor: simplify authentication middleware` |
+| `perf` | Performance improvement | `perf: improve query speed by adding index` |
+| `test` | Adding or fixing tests | `test: add unit tests for payment service` |
+| `build` | Build system or dependencies | `build: update webpack to v5` |
+| `ci` | CI configuration files and scripts | `ci: add GitHub Actions workflow for tests` |
+| `revert` | Reverting a previous commit | `revert: revert "feat: add user profile page"` |
+| `release` | Releasing a new version | `release: v1.0.1` |
+
 ## Packaging and releases
 
 - For installation or release changes, follow
