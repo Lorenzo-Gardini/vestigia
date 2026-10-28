@@ -1,0 +1,119 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    name: Python 3.12 / ${{ matrix.profile }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: core
+            extras: ""
+          - profile: openai
+            extras: "--extra openai"
+          - profile: typesafe
+            extras: "--extra typesafe"
+          - profile: all
+            extras: "--all-extras"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install dependencies
+        run: uv sync --locked --group dev ${{ matrix.extras }}
+
+      - name: Run tests
+        run: uv run --locked --group dev ${{ matrix.extras }} pytest
+
+  build:
+    name: Build and verify distributions
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Check release tag
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import tomllib
+
+          version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
+          expected = f"v{version}"
+          if os.environ["RELEASE_TAG"] != expected:
+              raise SystemExit(f"Release tag must be {expected}, got {os.environ['RELEASE_TAG']}")
+          PY
+
+      - name: Check lockfile
+        run: uv lock --check
+
+      - name: Build wheel and source distribution
+        run: uv build --no-sources
+
+      - name: Validate distribution metadata and README
+        run: uvx --from twine twine check --strict dist/*
+
+      - name: Verify installed wheel without source checkout imports
+        run: |
+          uv venv .venv-smoke
+          uv pip install --python .venv-smoke/bin/python dist/*.whl
+          .venv-smoke/bin/python -I - <<'PY'
+          from importlib.metadata import distribution
+          from importlib.resources import files
+
+          from vestigia.chunk_classification import Chunk
+          from vestigia.chunk_classification.prompts import load_chat_model_prompt
+
+          installed = distribution("vestigia")
+          assert installed.metadata["Name"] == "vestigia"
+          assert installed.metadata["License-Expression"] == "Apache-2.0"
+          assert not any(str(path).startswith("evidence/") for path in installed.files)
+          assert Chunk(id="smoke", text="Evidence").id == "smoke"
+          assert load_chat_model_prompt().strip()
+          assert files("vestigia.chunk_classification").joinpath(
+              "prompts", "system_one_model_prompt.yaml"
+          ).read_text(encoding="utf-8").strip()
+          PY
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+          if-no-files-found: error
