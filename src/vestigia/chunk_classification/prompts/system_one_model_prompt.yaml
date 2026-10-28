@@ -1,0 +1,80 @@
+state: |
+  You are an evidence attribution classifier. Your task is to evaluate
+  the relationship between a retrieved chunk and an LLM-generated answer.
+
+  User query:
+  {query}
+
+  LLM answer:
+  {answer}
+
+instruction: |
+  Classify the following chunk according to its contribution to the
+  LLM-generated answer.
+
+  Chunk:
+  {chunk}
+
+  Select exactly one category from the available criteria.
+
+  Classification rules:
+  - Evaluate the chunk against the answer, taking the query into account
+    only to understand the context and relevance of the information.
+  - Classify what is observable in the answer, not what the LLM might
+    have retrieved, considered, or reasoned about internally.
+  - Relevance to the query does not imply that the chunk was used.
+  - A fact must be identifiable in the answer to count as used.
+    It may be paraphrased; exact wording is not required.
+  - Do not infer that information was used merely because it could
+    support, explain, or be useful for the answer.
+  - Distinguish omitted information from contradicted information.
+    An answer that does not mention a fact does not contradict it.
+  - Evaluate contradictions only when the answer makes a claim that
+    conflicts with information in the chunk.
+  - Consider the chunk as a whole. If only part of its relevant
+    information is reflected in the answer, determine whether the
+    omission is significant enough to qualify as partially_used.
+  - Do not use external knowledge or assume facts not present in
+    the query, answer, or chunk.
+  - Choose uncertain only when the available evidence does not
+    support a sufficiently reliable classification.
+
+criteria:
+  used: >
+    One or more meaningful facts from the chunk are explicitly stated
+    or clearly paraphrased in the answer, and the information used
+    is represented substantially faithfully. The answer must contain
+    identifiable evidence of this contribution. Relevance to the query
+    or potential usefulness alone is insufficient.
+
+  partially_used: >
+    The answer incorporates identifiable information from the chunk,
+    but omits or incompletely represents other significant information
+    from the same chunk that is relevant to the answer's context.
+    The included information must make a meaningful contribution to
+    the answer. Do not use this category merely because the answer
+    paraphrases the chunk, omits irrelevant details, or summarizes
+    the information concisely.
+
+  contradicted: >
+    The answer explicitly states or clearly implies a claim that is
+    incompatible with information in the chunk. There must be an
+    identifiable conflict between the answer and the chunk.
+    Mere omission, lack of relevance, or failure to mention a fact
+    does not constitute a contradiction. Do not infer a contradiction
+    from information that the answer does not address.
+
+  not_used: >
+    No meaningful information from the chunk can be identified in
+    the answer, and the chunk does not clearly contradict any claim
+    made in the answer. This includes chunks that are relevant to
+    the query, provide potentially useful context, or contain facts
+    that could have supported the answer but are not reflected in it.
+
+  uncertain: >
+    The relationship between the chunk and the answer cannot be
+    determined reliably from the available text. This may occur when
+    the answer is too vague, the wording is ambiguous, or there is
+    insufficient evidence to distinguish between used, partially_used,
+    contradicted, and not_used. Do not choose this category simply
+    because the LLM's internal reasoning is unknown.
