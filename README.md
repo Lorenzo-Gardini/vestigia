@@ -35,15 +35,23 @@ not contribute to an answer.
 
 ## Quick start
 
-Requires Python 3.12 or newer. In your virtual environment, install the OpenAI
-integration:
+Requires Python 3.12 or newer. Install the OpenAI integration with your package
+manager:
 
 ```bash
+# pip (inside your virtual environment)
 python -m pip install "vestigia[openai]"
+
+# uv (in a uv-managed project)
+uv add "vestigia[openai]"
+
+# Poetry (in a Poetry-managed project)
+poetry add "vestigia[openai]"
 ```
 
 Set `OPENAI_API_KEY` in your environment. Save the following example as
-`classify.py` and run it with `python classify.py`.
+`classify.py` and run it with `python classify.py` (or `uv run classify.py`,
+`poetry run python classify.py`).
 This example sends data to the configured provider and may incur API charges.
 
 ```python
@@ -88,8 +96,8 @@ structured output; the OpenAI integration above is one option.
 
 ### Use a TypeSafe system-one model
 
-Install the extra with `python -m pip install "vestigia[typesafe]"` and set
-`TYPESAFE_API_KEY`.
+Install the extra with `python -m pip install "vestigia[typesafe]"`
+(`uv add` or `poetry add` work the same way) and set `TYPESAFE_API_KEY`.
 Save this example as `classify.py` and run it with
 `python classify.py`:
 
@@ -239,7 +247,7 @@ python -m pip install vestigia
 ```
 
 Install optional integrations with `python -m pip install "vestigia[<extra>]"`,
-or use `uv add "vestigia[<extra>]"` in a uv-managed application:
+`uv add "vestigia[<extra>]"`, or `poetry add "vestigia[<extra>]"`:
 
 | Extra | Includes |
 | --- | --- |
