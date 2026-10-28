@@ -1,0 +1,55 @@
+[project]
+name = "vestigia"
+version = "0.1.0"
+description = "Evidence attribution for LLM-generated answers using retrieved text chunks."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Lorenzo Gardini", email = "l.gardo98@gmail.com" }
+]
+requires-python = ">=3.12"
+keywords = ["llm", "rag", "evidence", "attribution", "langchain"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "pydantic>=2.14.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/Lorenzo-Gardini/evidence"
+Repository = "https://github.com/Lorenzo-Gardini/evidence"
+Issues = "https://github.com/Lorenzo-Gardini/evidence/issues"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.optional-dependencies]
+typesafe = [
+    "langchain-typesafe>=0.0.1a3",
+    "pyyaml>=6.0",
+]
+
+openai = [
+    "langchain-openai>=1.7.3",
+]
+
+anthropic = [
+    "langchain-anthropic>=1.7.7",
+]
+
+all = [
+    "vestigia[typesafe,openai,anthropic]",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.9,<0.10.0"]
+build-backend = "uv_build"
