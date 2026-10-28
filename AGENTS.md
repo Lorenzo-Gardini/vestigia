@@ -87,8 +87,8 @@ types:
 ## Packaging and releases
 
 - For installation or release changes, follow
-  [Releasing to PyPI](README.md#releasing-to-pypi), which owns the setup and
-  release checklist. The old `evidence` Python namespace has no compatibility alias.
+  [Releasing to PyPI](README.md#releasing-to-pypi), which owns the publishing
+  configuration and release checklist.
 - Keep distribution and import names aligned as `vestigia`, including the
   self-referencing `all` extra and `importlib.resources` package names.
 - Keep version metadata in `pyproject.toml` and update `uv.lock` with `uv lock`.

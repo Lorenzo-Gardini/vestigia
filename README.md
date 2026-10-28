@@ -9,6 +9,9 @@ not contribute to an answer.
   <a href="https://github.com/Lorenzo-Gardini/evidence/actions/workflows/tests.yml">
     <img src="https://github.com/Lorenzo-Gardini/evidence/actions/workflows/tests.yml/badge.svg?branch=main" alt="Tests">
   </a>
+  <a href="https://pypi.org/project/vestigia/">
+    <img src="https://img.shields.io/pypi/v/vestigia" alt="PyPI version">
+  </a>
   <img src="https://img.shields.io/badge/python-3.12%2B-blue" alt="Python 3.12 or newer">
 </p>
 
@@ -236,9 +239,8 @@ receives each chunk's text as `chunk`. Criteria require at least two statuses.
 
 ## Installation options
 
-The PyPI distribution and Python import package are both named `vestigia`.
-The GitHub repository is still named `evidence`; the former Python import
-`evidence` has been replaced without a compatibility alias.
+The PyPI distribution and Python import package are both named `vestigia`;
+the GitHub repository is named `evidence`.
 
 Install the core models without provider integrations:
 
@@ -291,13 +293,12 @@ For architecture and contribution guidance, see [AGENTS.md](AGENTS.md).
 Publishing uses [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/):
 no PyPI API token needs to be stored in GitHub.
 
-### One-time setup
+### Publishing configuration
 
-Create a GitHub environment named `pypi` in this repository's settings. Configure
-required reviewers if you want manual approval before an upload.
-
-In [PyPI account publishing settings](https://pypi.org/manage/account/publishing/),
-add a pending GitHub publisher for the first release with these exact values:
+Releases upload through the `pypi` GitHub environment in this repository's
+settings; configure required reviewers there for manual approval before an
+upload. The [vestigia PyPI project](https://pypi.org/manage/project/vestigia/settings/publishing/)
+trusts this GitHub publisher:
 
 | Setting | Value |
 | --- | --- |
@@ -307,13 +308,13 @@ add a pending GitHub publisher for the first release with these exact values:
 | Workflow filename | `publish.yml` |
 | Environment | `pypi` |
 
-For an existing PyPI project, add the publisher in that project's publishing
-settings instead. A pending publisher does not reserve the project name.
+Renaming the repository, workflow file, or environment requires updating the
+publisher on PyPI.
 
 ### Publish a version
 
 1. Update `project.version` in [pyproject.toml](pyproject.toml), run `uv lock`,
-   and commit the version and lockfile together. The initial version is `0.1.0`.
+   and commit the version and lockfile together.
 2. Verify the tests and packaging locally:
 
    ```bash
