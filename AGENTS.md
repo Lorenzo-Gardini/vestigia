@@ -3,7 +3,7 @@
 ## Purpose
 
 Vestigia (`vestigia` on PyPI and in Python imports) compares retrieved text
-chunks with an LLM-generated answer. The GitHub repository remains `evidence`.
+chunks with an LLM-generated answer. The GitHub repository is `vestigia`.
 Labels describe observable use, omission, or conflict, not the generating
 model's hidden reasoning. It offers structured chat-model classification and a
 TypeSafe system-one approach. The public usage guide and installation options

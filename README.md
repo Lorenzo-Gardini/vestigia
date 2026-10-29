@@ -1,13 +1,13 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Lorenzo-Gardini/evidence/main/assets/vestigia-banner.svg" alt="Vestigia - Trace answers back to evidence. An illustrated magnifying glass connects source passages to an answer." width="100%">
+<img src="https://raw.githubusercontent.com/Lorenzo-Gardini/vestigia/main/assets/vestigia-banner.svg" alt="Vestigia - Trace answers back to evidence. An illustrated magnifying glass connects source passages to an answer." width="100%">
 
 Classify how retrieved text supports, partially supports, contradicts, or does
 not contribute to an answer.
 
 <p>
-  <a href="https://github.com/Lorenzo-Gardini/evidence/actions/workflows/tests.yml">
-    <img src="https://github.com/Lorenzo-Gardini/evidence/actions/workflows/tests.yml/badge.svg?branch=main" alt="Tests">
+  <a href="https://github.com/Lorenzo-Gardini/vestigia/actions/workflows/tests.yml">
+    <img src="https://github.com/Lorenzo-Gardini/vestigia/actions/workflows/tests.yml/badge.svg?branch=main" alt="Tests">
   </a>
   <a href="https://pypi.org/project/vestigia/">
     <img src="https://img.shields.io/pypi/v/vestigia" alt="PyPI version">
@@ -239,8 +239,8 @@ receives each chunk's text as `chunk`. Criteria require at least two statuses.
 
 ## Installation options
 
-The PyPI distribution and Python import package are both named `vestigia`;
-the GitHub repository is named `evidence`.
+The PyPI distribution, Python import package, and GitHub repository are all
+named `vestigia`.
 
 Install the core models without provider integrations:
 
@@ -267,8 +267,8 @@ Install [uv](https://docs.astral.sh/uv/), clone the repository, and install the
 test and classifier dependencies:
 
 ```bash
-git clone https://github.com/Lorenzo-Gardini/evidence.git
-cd evidence
+git clone https://github.com/Lorenzo-Gardini/vestigia.git
+cd vestigia
 uv sync --locked --group dev --all-extras
 ```
 
@@ -304,12 +304,12 @@ trusts this GitHub publisher:
 | --- | --- |
 | PyPI project name | `vestigia` |
 | Owner | `Lorenzo-Gardini` |
-| Repository | `evidence` |
+| Repository | `vestigia` |
 | Workflow filename | `publish.yml` |
 | Environment | `pypi` |
 
-Renaming the repository, workflow file, or environment requires updating the
-publisher on PyPI.
+Ensure the PyPI Trusted Publisher configuration uses the current repository,
+workflow, and environment values shown above.
 
 ### Publish a version
 
