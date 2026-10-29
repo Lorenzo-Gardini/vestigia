@@ -12,6 +12,7 @@ if find_spec("langchain_typesafe") is None:
 from langchain_typesafe import Choice, ClassifierResponse, TypeSafeClassifier
 
 from vestigia.chunk_classification import Chunk, ChunkStatus, SystemOneModelTemplate
+from vestigia.chunk_classification.classifier import ModelResponseError
 from vestigia.chunk_classification.langchain import SystemOneModelChunkClassifier
 
 
@@ -109,8 +110,8 @@ def test_duplicate_ids_fail_before_model_call(model: Mock, chunks: list[Chunk]) 
 @pytest.mark.parametrize(
     ("invalid", "message"),
     [
-        ("missing", "answer IDs must match"),
-        ("extra", "answer IDs must match"),
+        ("missing", "missing: 'first'"),
+        ("extra", "extra: 'unknown'"),
         ("wrong_type", "Expected a choice answer"),
         ("unknown_status", "outside the criteria"),
     ],
@@ -129,7 +130,7 @@ def test_invalid_system_one_answers_fail(
     else:
         response["answers"]["first"]["choice"] = "unknown"
     model.ainvoke.return_value = ClassifierResponse.model_validate(response)
-    with pytest.raises(ValueError, match=message):
+    with pytest.raises(ModelResponseError, match=message):
         asyncio.run(
             SystemOneModelChunkClassifier(model).classify(
                 query="Q", answer="A", chunks=chunks

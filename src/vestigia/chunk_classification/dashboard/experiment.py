@@ -8,6 +8,7 @@ Examples
 """
 
 from collections.abc import Iterable
+import os
 import re
 from typing import Any, Literal
 
@@ -21,7 +22,7 @@ from vestigia.chunk_classification import (
     EvidenceModel,
     SystemOneModelTemplate,
 )
-from vestigia.chunk_classification.classifier import ChunkClassifier
+from vestigia.chunk_classification.classifier import ChunkClassifier, ModelResponseError
 from vestigia.chunk_classification.prompts import (
     load_chat_model_prompt,
     load_system_one_prompt,
@@ -30,6 +31,24 @@ from vestigia.chunk_classification.prompts import (
 Provider = Literal["openai", "anthropic", "typesafe"]
 CHAT_PROVIDERS: tuple[Provider, ...] = ("openai", "anthropic")
 CHAT_PROMPT_VARIABLES = {"query", "answer", "chunks"}
+API_KEY_ENV: dict[Provider, str] = {
+    "openai": "OPENAI_API_KEY",
+    "anthropic": "ANTHROPIC_API_KEY",
+    "typesafe": "TYPESAFE_API_KEY",
+}
+
+
+class ChunkFormatError(ValueError):
+    """A chunk file whose structure is not one of the accepted shapes."""
+
+
+class MissingAPIKeyError(ValueError):
+    """No API key was entered and the provider's environment variable is unset."""
+
+    def __init__(self, provider: Provider) -> None:
+        self.provider = provider
+        self.env_var = API_KEY_ENV[provider]
+        super().__init__(f"No API key given and {self.env_var} is not set")
 
 
 def natural_sort_key(value: str) -> tuple[tuple[int, int | str], ...]:
@@ -239,9 +258,11 @@ def parse_chunk_file(content: str) -> list[Chunk]:
                 chunk_id = item.get("id")
                 rows.append(("" if chunk_id is None else str(chunk_id), _text(item["text"])))
             else:
-                raise ValueError("Each list item must be a string or an {id, text} object")
+                raise ChunkFormatError(
+                    "Each list item must be a string or an {id, text} object"
+                )
     else:
-        raise ValueError(
+        raise ChunkFormatError(
             "Chunk files must contain a mapping of ID to text or a non-empty list"
         )
     return normalize_chunks(rows)
@@ -249,7 +270,7 @@ def parse_chunk_file(content: str) -> list[Chunk]:
 
 def _text(value: Any) -> str:
     if not isinstance(value, str):
-        raise ValueError("Chunk text must be a string")
+        raise ChunkFormatError("Chunk text must be a string")
     return value
 
 
@@ -261,7 +282,7 @@ def validate_prompt(prompt: ChatPrompt | SystemOneModelTemplate) -> None:
     >>> validate_prompt(ChatPrompt(template="{query} {answer}"))
     Traceback (most recent call last):
     ...
-    ValueError: The chat prompt must use exactly {answer}, {chunks}, {query}; missing {chunks}
+    ValueError: The chat prompt is missing {chunks}; it must use {answer}, {chunks}, and {query}
     """
     if isinstance(prompt, ChatPrompt):
         _check_variables("chat prompt", prompt.template, CHAT_PROMPT_VARIABLES, exact=True)
@@ -274,20 +295,28 @@ def _check_variables(name: str, template: str, allowed: set[str], exact: bool = 
     used = set(PromptTemplate.from_template(template).input_variables)
     if unknown := used - allowed:
         raise ValueError(
-            f"The {name} uses unknown placeholders: "
-            + ", ".join(f"{{{v}}}" for v in sorted(unknown))
+            f"The {name} uses unknown placeholders {_placeholders(unknown)}; "
+            f"it can only use {_placeholders(allowed)}"
         )
     if exact and (missing := allowed - used):
         raise ValueError(
-            f"The {name} must use exactly "
-            + ", ".join(f"{{{v}}}" for v in sorted(allowed))
-            + "; missing "
-            + ", ".join(f"{{{v}}}" for v in sorted(missing))
+            f"The {name} is missing {_placeholders(missing)}; "
+            f"it must use {_placeholders(allowed)}"
         )
+
+
+def _placeholders(names: set[str]) -> str:
+    items = [f"{{{name}}}" for name in sorted(names)]
+    if len(items) < 3:
+        return " and ".join(items)
+    return f"{', '.join(items[:-1])}, and {items[-1]}"
 
 
 def build_classifier(config: ModelConfig, api_key: str | None) -> ChunkClassifier:
     """Create the configured classifier; unset options fall back to provider defaults.
+
+    Without ``api_key`` the provider's environment variable (``API_KEY_ENV``)
+    must be set, otherwise ``MissingAPIKeyError`` is raised.
 
     Examples
     --------
@@ -295,6 +324,8 @@ def build_classifier(config: ModelConfig, api_key: str | None) -> ChunkClassifie
     >>> type(build_classifier(config, api_key="lm-studio")).__name__
     'ChatModelChunkClassifier'
     """
+    if not api_key and not os.environ.get(API_KEY_ENV[config.provider], "").strip():
+        raise MissingAPIKeyError(config.provider)
     options = {
         key: value
         for key, value in {
@@ -326,7 +357,8 @@ def build_classifier(config: ModelConfig, api_key: str | None) -> ChunkClassifie
 async def evaluate(experiment: Experiment, api_key: str | None) -> Experiment:
     """Classify the experiment's chunks and return it with fresh evaluations.
 
-    Provider and validation errors propagate to the caller.
+    Provider and validation errors propagate to the caller. A model response
+    that cannot be read as classifications raises ``ModelResponseError``.
 
     Examples
     --------
@@ -337,14 +369,20 @@ async def evaluate(experiment: Experiment, api_key: str | None) -> Experiment:
     validate_prompt(experiment.prompt)
     classifier = build_classifier(experiment.model, api_key)
     prompt = experiment.prompt
-    result = await classifier.classify(
-        query=experiment.input,
-        answer=experiment.output,
-        chunks=[Chunk(id=key, text=text) for key, text in experiment.chunks.items()],
-        prompt=PromptTemplate.from_template(prompt.template)
-        if isinstance(prompt, ChatPrompt)
-        else prompt,
-    )
+    try:
+        result = await classifier.classify(
+            query=experiment.input,
+            answer=experiment.output,
+            chunks=[Chunk(id=key, text=text) for key, text in experiment.chunks.items()],
+            prompt=PromptTemplate.from_template(prompt.template)
+            if isinstance(prompt, ChatPrompt)
+            else prompt,
+        )
+    except ModelResponseError:
+        raise
+    except ValueError as exc:
+        # Inputs are validated above, so a ValueError here comes from parsing the reply.
+        raise ModelResponseError("The model response could not be read") from exc
     evaluations = {
         item.chunk.id: Evaluation(
             status=item.status,
