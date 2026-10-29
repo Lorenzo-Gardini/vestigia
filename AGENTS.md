@@ -92,18 +92,32 @@ types:
 | `revert` | Reverting a previous commit | `revert: revert "feat: add user profile page"` |
 | `release` | Releasing a new version | `release: v1.0.1` |
 
+Release-please reads these subjects on `main`: `fix` bumps the patch version,
+`feat` the minor version, and `<type>!:` or a `BREAKING CHANGE:` footer the
+major version. `feat`, `fix`, `perf`, and `revert` appear in `CHANGELOG.md`.
+
 ## Packaging and releases
 
-- For installation or release changes, follow
-  [Releasing to PyPI](README.md#releasing-to-pypi), which owns the publishing
-  configuration and release checklist.
+- Releases are automated with
+  [release-please](https://github.com/googleapis/release-please). Each push to
+  `main` runs `.github/workflows/publish.yml`, which opens or updates a
+  `release: vX.Y.Z` pull request that bumps `pyproject.toml`, `uv.lock`, and
+  `CHANGELOG.md`. Merging that pull request tags `vX.Y.Z`, creates the GitHub
+  Release, runs `.github/workflows/tests.yml` with the tag check, and publishes
+  the tested artifacts to PyPI through Trusted Publishing.
+- Configuration lives in `release-please-config.json`; the last released
+  version is in `.release-please-manifest.json`. Do not edit versions,
+  `CHANGELOG.md`, or the manifest by hand. To force a version, add a
+  `Release-As: X.Y.Z` footer to a commit on `main`.
+- PyPI Trusted Publishing is bound to the `publish.yml` file name and the
+  `pypi` environment; keep both. Releases created by the default
+  `GITHUB_TOKEN` do not trigger other workflows, so publishing stays inside
+  `publish.yml`.
 - Keep distribution and import names aligned as `vestigia`, including the
   self-referencing `all` extra and `importlib.resources` package names.
-- Keep version metadata in `pyproject.toml` and update `uv.lock` with `uv lock`.
-  Build wheel and sdist with `uv build --no-sources`; validate them using
+- Build wheel and sdist with `uv build --no-sources`; validate them using
   `uvx --from twine twine check --strict dist/*` from a clean output directory.
 - `.github/workflows/tests.yml` also validates an isolated wheel installation.
-  `.github/workflows/publish.yml` publishes those tested artifacts only for a
-  published GitHub Release whose tag matches the package version.
-- Publishing requires an explicitly requested release; preparing packaging or
-  pushing code alone is not authorization to create a release or upload packages.
+- Merging a release pull request publishes to PyPI. Never merge, approve, or
+  create one, nor create tags or GitHub Releases, unless a release is explicitly
+  requested.

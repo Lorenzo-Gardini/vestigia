@@ -4,6 +4,11 @@ on:
   push:
   pull_request:
   workflow_call:
+    inputs:
+      release-tag:
+        description: Tag being released; the package version must match it.
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -63,9 +68,9 @@ jobs:
         uses: astral-sh/setup-uv@v6
 
       - name: Check release tag
-        if: github.event_name == 'release'
+        if: inputs.release-tag != ''
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ inputs.release-tag }}
         run: |
           python - <<'PY'
           import os
