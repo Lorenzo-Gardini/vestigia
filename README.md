@@ -17,6 +17,7 @@ not contribute to an answer.
 
 <p>
   <a href="#features">Features</a> ·
+  <a href="#installation-options">Install</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#classification-statuses">Statuses</a> ·
   <a href="#development">Development</a>
@@ -34,6 +35,26 @@ not contribute to an answer.
 - **Packaged prompts:** Markdown and YAML prompt templates are available through
   Python APIs.
 - **Optional integrations:** install only the provider dependencies you need.
+
+## Installation options
+
+The PyPI distribution, Python import package, and GitHub repository are all
+named `vestigia`. Choose the install that matches the integrations you need:
+
+| Configuration | pip command | Includes |
+| --- | --- | --- |
+| Base | `python -m pip install vestigia` | Core models and classifiers |
+| OpenAI with LangChain | `python -m pip install "vestigia[openai]"` | LangChain OpenAI integration |
+| TypeSafe with LangChain | `python -m pip install "vestigia[typesafe]"` | TypeSafe classifier and YAML prompt support |
+| Anthropic with LangChain | `python -m pip install "vestigia[anthropic]"` | LangChain Anthropic integration |
+| Everything | `python -m pip install "vestigia[all]"` | All optional integrations |
+
+There is no separate `langchain` extra: each optional extra installs its
+corresponding LangChain integration. With uv or Poetry, replace
+`python -m pip install` with `uv add` or `poetry add`.
+
+`ChatModelChunkClassifier` accepts any LangChain `BaseChatModel`, so the
+`openai` and `anthropic` extras are conveniences rather than requirements.
 
 ## Quick start
 
@@ -235,30 +256,6 @@ receives each chunk's text as `chunk`. Criteria require at least two statuses.
 - Model attributes are frozen and extra fields are rejected. Freezing is
   shallow: nested dictionaries remain mutable, and normal Pydantic type
   coercion applies.
-
-## Installation options
-
-The PyPI distribution, Python import package, and GitHub repository are all
-named `vestigia`.
-
-Install the core models without provider integrations:
-
-```bash
-python -m pip install vestigia
-```
-
-Install optional integrations with `python -m pip install "vestigia[<extra>]"`,
-`uv add "vestigia[<extra>]"`, or `poetry add "vestigia[<extra>]"`:
-
-| Extra | Includes |
-| --- | --- |
-| `openai` | LangChain OpenAI integration |
-| `typesafe` | TypeSafe classifier and YAML prompt support |
-| `anthropic` | LangChain Anthropic integration |
-| `all` | All optional integrations |
-
-`ChatModelChunkClassifier` accepts any LangChain `BaseChatModel`, so the
-`openai` and `anthropic` extras are conveniences rather than requirements.
 
 ## Development
 
