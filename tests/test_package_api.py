@@ -38,7 +38,8 @@ def test_public_package_exports():
         "SystemOneModelChunksClassificationResult",
         "SystemOneModelTemplate",
     ]
-    assert classifier.__all__ == ["ChunkClassifier"]
+    assert classifier.__all__ == ["ChunkClassifier", "ModelResponseError"]
+    assert issubclass(classifier.ModelResponseError, ValueError)
     for name in chunk_classification.__all__:
         assert getattr(chunk_classification, name).__name__ == name
     assert classifier.ChunkClassifier is ChunkClassifier

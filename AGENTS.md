@@ -16,14 +16,17 @@ are in [README.md](README.md).
 - `src/vestigia/chunk_classification/prompts/` contains the packaged Markdown
   and YAML prompts. `prompts.py` loads and validates them.
 - `src/vestigia/chunk_classification/classifier.py` defines the generic async
-  `ChunkClassifier` protocol.
+  `ChunkClassifier` protocol and `ModelResponseError`.
 - `src/vestigia/chunk_classification/langchain/` contains the chat-model and
   TypeSafe adapters. The package initializer loads each adapter lazily because
   their optional dependencies are separate.
 - `src/vestigia/chunk_classification/dashboard/` contains the Streamlit
   dashboard (`dashboard` extra, `vestigia-dashboard` command). `experiment.py`
   holds the Streamlit-free logic (chunk parsing, YAML export/import, classifier
-  construction); `app.py` is UI only. Exports never include API keys.
+  construction); `errors.py` turns exceptions into plain-language reports
+  (title, guidance, technical details), using the provider-independent
+  `langchain_core.exceptions.Model*Error` hierarchy; `app.py` is UI only.
+  Exports never include API keys.
 - `tests/` contains pytest checks for package exports, model contracts, prompt
   loading, and classifier behavior.
 
@@ -31,7 +34,8 @@ are in [README.md](README.md).
 
 - Require unique `Chunk.id` values per call and associate backend answers by ID.
   Return validated results in input order, built from the original `Chunk`
-  objects. Reject missing, extra, or duplicate answer IDs with `ValueError`.
+  objects. Reject missing, extra, or duplicate answer IDs with
+  `ModelResponseError`, a `ValueError` subclass listing the offending IDs.
   The chat model's structured output carries only `chunk_id`, never chunk text.
 - Empty chunk input returns an empty result without a backend invocation.
 - Classification statuses are `used`, `partially_used`, `contradicted`,

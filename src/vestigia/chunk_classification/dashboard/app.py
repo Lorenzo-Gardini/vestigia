@@ -7,9 +7,9 @@ from collections.abc import Iterable
 from html import escape
 
 import streamlit as st
-from pydantic import ValidationError
 
 from vestigia.chunk_classification import ChunkStatus, SystemOneModelTemplate
+from vestigia.chunk_classification.dashboard import errors
 from vestigia.chunk_classification.dashboard import experiment as ex
 
 PROVIDERS = {
@@ -191,19 +191,10 @@ def _init_state() -> None:
         state[key] = state[key]
 
 
-def _message(exc: Exception) -> str:
-    if isinstance(exc, ValidationError):
-        return "; ".join(
-            (
-                f"{'.'.join(map(str, error['loc']))}: {error['msg']}"
-                if error["loc"]
-                else error["msg"]
-            )
-            for error in exc.errors()
-        )
-    if isinstance(exc, ValueError):
-        return str(exc)
-    return f"{type(exc).__name__}: {exc}"
+def _show_error(report: errors.ErrorReport) -> None:
+    st.error(f"**{report.title}**\n\n{report.message}")
+    with st.expander("Technical details"):
+        st.code(report.details, language=None, wrap_lines=True)
 
 
 def _load_experiment() -> None:
@@ -213,7 +204,7 @@ def _load_experiment() -> None:
     try:
         loaded = ex.from_yaml(upload.getvalue().decode("utf-8"))
     except Exception as exc:
-        state.import_error = f"Could not import this file. {_message(exc)}"
+        state.import_error = errors.describe_import_error(exc, "experiment")
         return
     state.import_error = None
     state.provider = loaded.model.provider
@@ -236,7 +227,7 @@ def _load_chunks() -> None:
     try:
         chunks = ex.parse_chunk_file(upload.getvalue().decode("utf-8"))
     except Exception as exc:
-        state.chunk_error = f"Could not import chunks. {_message(exc)}"
+        state.chunk_error = errors.describe_import_error(exc, "chunks")
         return
     state.chunk_error = None
     _set_chunks((chunk.id, chunk.text) for chunk in chunks)
@@ -356,7 +347,7 @@ def _appbar(result: ex.Experiment | None) -> None:
         help="Download settings, prompt, inputs, chunks, and results as YAML.",
     )
     if state.import_error:
-        st.error(state.import_error)
+        _show_error(state.import_error)
 
 
 def _section_header(title: str, on_expand, on_collapse, key: str):
@@ -389,7 +380,7 @@ def _render_chunks() -> None:
             help="A mapping of ID to text, a list of {id, text}, or a list of strings.",
         )
     if state.chunk_error:
-        st.error(state.chunk_error)
+        _show_error(state.chunk_error)
     grid = st.columns(2, gap="medium")
     ordered_chunks = sorted(
         enumerate(state.chunk_uids, start=1),
@@ -597,16 +588,21 @@ def main() -> None:
             on_click=_start,
         )
         if state.error:
-            st.error(state.error)
+            _show_error(state.error)
     if state.running:
         state.result = state.error = None
+        current = None
         try:
             with setup, st.spinner("Evaluating chunks…"):
                 current = _current_experiment()
                 state.result = asyncio.run(ex.evaluate(current, state.api_key or None))
             state.show_results = True
         except Exception as exc:
-            state.error = f"Evaluation failed. {_message(exc)}"
+            state.error = errors.describe_evaluation_error(
+                exc,
+                current.model if current else None,
+                api_key_from_field=bool(state.api_key),
+            )
         state.running = False
         st.rerun()
 
