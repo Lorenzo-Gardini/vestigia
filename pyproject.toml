@@ -46,9 +46,17 @@ anthropic = [
     "langchain-anthropic>=1.7.7",
 ]
 
-all = [
+dashboard = [
+    "streamlit>=1.66.1",
     "vestigia[typesafe,openai,anthropic]",
 ]
+
+all = [
+    "vestigia[typesafe,openai,anthropic,dashboard]",
+]
+
+[project.scripts]
+vestigia-dashboard = "vestigia.chunk_classification.dashboard:main"
 
 [build-system]
 requires = ["uv_build>=0.9.9,<0.10.0"]

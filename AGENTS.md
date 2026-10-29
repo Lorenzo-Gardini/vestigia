@@ -20,6 +20,10 @@ are in [README.md](README.md).
 - `src/vestigia/chunk_classification/langchain/` contains the chat-model and
   TypeSafe adapters. The package initializer loads each adapter lazily because
   their optional dependencies are separate.
+- `src/vestigia/chunk_classification/dashboard/` contains the Streamlit
+  dashboard (`dashboard` extra, `vestigia-dashboard` command). `experiment.py`
+  holds the Streamlit-free logic (chunk parsing, YAML export/import, classifier
+  construction); `app.py` is UI only. Exports never include API keys.
 - `tests/` contains pytest checks for package exports, model contracts, prompt
   loading, and classifier behavior.
 

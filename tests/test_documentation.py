@@ -30,6 +30,10 @@ import pytest
             "vestigia.chunk_classification.langchain.system_one_classifier",
             ("langchain_typesafe",),
         ),
+        (
+            "vestigia.chunk_classification.dashboard.experiment",
+            ("yaml", "langchain_openai"),
+        ),
     ],
 )
 def test_docstring_examples(module_name: str, dependencies: tuple[str, ...]) -> None:
