@@ -23,7 +23,12 @@ from vestigia.chunk_classification import (
     SystemOneModelChunksClassificationResult,
     SystemOneModelTemplate,
 )
-from vestigia.chunk_classification.classifier import ChunkClassifier, _index_chunks
+from vestigia.chunk_classification.classifier import (
+    ChunkClassifier,
+    ModelResponseError,
+    _check_response_ids,
+    _index_chunks,
+)
 from vestigia.chunk_classification.prompts import load_system_one_prompt
 
 
@@ -89,8 +94,10 @@ class SystemOneModelChunkClassifier(
         Raises
         ------
         ValueError
-            If input IDs are duplicated, answer IDs differ from input IDs,
-            an answer is not a choice, or its labels are absent from the criteria.
+            If input IDs are duplicated.
+        ModelResponseError
+            If answer IDs differ from input IDs, an answer is not a choice, or
+            its labels are absent from the criteria.
 
         Backend, template-formatting, and Pydantic validation errors propagate.
 
@@ -132,18 +139,21 @@ class SystemOneModelChunkClassifier(
                 },
             }
         )
-        if response.answers.keys() != indexed_chunks.keys():
-            raise ValueError("Model answer IDs must match input chunk IDs exactly")
+        _check_response_ids(
+            "Model answer IDs must match input chunk IDs exactly",
+            indexed_chunks,
+            list(response.answers),
+        )
         classifications: list[SystemOneModelChunkClassification] = []
         for chunk in indexed_chunks.values():
             chunk_answer = response.answers[chunk.id]
             if not isinstance(chunk_answer, ChoiceAnswer):
-                raise ValueError(f"Expected a choice answer for chunk {chunk.id!r}")
+                raise ModelResponseError(f"Expected a choice answer for chunk {chunk.id!r}")
             if (
                 chunk_answer.choice not in prompt.criteria
                 or not chunk_answer.probabilities.keys() <= prompt.criteria.keys()
             ):
-                raise ValueError(
+                raise ModelResponseError(
                     f"Model answer uses a status outside the criteria: {chunk.id!r}"
                 )
             classifications.append(

@@ -34,6 +34,10 @@ import pytest
             "vestigia.chunk_classification.dashboard.experiment",
             ("yaml", "langchain_openai"),
         ),
+        (
+            "vestigia.chunk_classification.dashboard.errors",
+            ("yaml", "langchain_core"),
+        ),
     ],
 )
 def test_docstring_examples(module_name: str, dependencies: tuple[str, ...]) -> None:

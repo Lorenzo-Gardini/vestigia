@@ -25,7 +25,11 @@ from vestigia.chunk_classification import (
     ChunkStatus,
     EvidenceModel,
 )
-from vestigia.chunk_classification.classifier import ChunkClassifier, _index_chunks
+from vestigia.chunk_classification.classifier import (
+    ChunkClassifier,
+    _check_response_ids,
+    _index_chunks,
+)
 from vestigia.chunk_classification.prompts import load_chat_model_prompt
 
 
@@ -114,8 +118,9 @@ class ChatModelChunkClassifier(
         Raises
         ------
         ValueError
-            If input IDs are duplicated or result IDs are missing, extra, or
-            duplicated.
+            If input IDs are duplicated.
+        ModelResponseError
+            If result IDs are missing, extra, or duplicated.
 
         Backend and Pydantic validation errors propagate to the caller.
 
@@ -150,11 +155,12 @@ class ChatModelChunkClassifier(
                 }
             )
         )
+        _check_response_ids(
+            "Model classifications must match input chunk IDs exactly",
+            indexed_chunks,
+            [label.chunk_id for label in result.classifications],
+        )
         labels = {label.chunk_id: label for label in result.classifications}
-        if len(labels) != len(result.classifications):
-            raise ValueError("Duplicate chunk IDs in model classifications")
-        if labels.keys() != indexed_chunks.keys():
-            raise ValueError("Model classifications must match input chunk IDs exactly")
         return ChatModelChunksClassificationResult(
             classifications=tuple(
                 ChatModelChunkClassification(

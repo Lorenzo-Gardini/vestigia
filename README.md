@@ -196,7 +196,9 @@ From a clone, run `uv run vestigia-dashboard`. The dashboard lets you:
   ID-to-text mapping, a list of `{id, text}`, or a list of strings; blank IDs
   become `1`…`N` by position;
 - edit the prompt, including system-one criteria;
-- evaluate and review color-coded results per chunk;
+- evaluate and review color-coded results per chunk; failures explain what to
+  check (for example an unreachable Base URL or a rejected API key), with the
+  original error under **Technical details**;
 - export the experiment as YAML (model settings, prompt, inputs, chunks, and
   results) and import it later to restore everything.
 
@@ -302,9 +304,11 @@ receives each chunk's text as `chunk`. Criteria require at least two statuses.
   before a provider is invoked.
 - An empty chunk sequence returns `classifications=()` without a provider call.
 - Results follow input order and contain the original `Chunk` objects. Missing,
-  extra, or duplicate response IDs raise `ValueError`.
+  extra, or duplicate response IDs raise `ModelResponseError` (from
+  `vestigia.chunk_classification.classifier`), a `ValueError` subclass whose
+  `missing`, `extra`, and `duplicates` attributes list the offending IDs.
 - System-one answers must be choice answers whose labels belong to the prompt's
-  criteria. Confidence and probability values must be finite and in `[0, 1]`.
+  criteria; other answers raise `ModelResponseError`. Confidence and probability values must be finite and in `[0, 1]`.
   The package does not normalize the distribution or require an exact sum of 1.
 - Backend, prompt-formatting, and Pydantic validation errors propagate to the
   caller; the package does not substitute partial or empty success responses.

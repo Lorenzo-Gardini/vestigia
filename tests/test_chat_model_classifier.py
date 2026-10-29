@@ -18,6 +18,7 @@ from vestigia.chunk_classification import (
     Chunk,
     ChunkStatus,
 )
+from vestigia.chunk_classification.classifier import ModelResponseError
 from vestigia.chunk_classification.langchain import ChatModelChunkClassifier
 from vestigia.chunk_classification.langchain.chat_model_classifier import (
     ChunkLabel,
@@ -83,9 +84,9 @@ def test_duplicate_ids_fail_before_model_call(model: Mock, chunks: list[Chunk]) 
 @pytest.mark.parametrize(
     ("returned_ids", "message"),
     [
-        (("first",), "match input chunk IDs"),
-        (("first", "second", "unknown"), "match input chunk IDs"),
-        (("first", "second", "first"), "Duplicate chunk IDs"),
+        (("first",), "missing: 'second'"),
+        (("first", "second", "unknown"), "extra: 'unknown'"),
+        (("first", "second", "first"), "duplicate: 'first'"),
     ],
     ids=["missing", "extra", "duplicate"],
 )
@@ -95,7 +96,7 @@ def test_invalid_chat_results_fail(
     """Reject missing, invented, and duplicated chunk IDs."""
     response = labels(*returned_ids)
     model.with_structured_output.return_value = RunnableLambda(lambda _: response)
-    with pytest.raises(ValueError, match=message):
+    with pytest.raises(ModelResponseError, match=message):
         asyncio.run(
             ChatModelChunkClassifier(model).classify(
                 query="Q", answer="A", chunks=chunks
