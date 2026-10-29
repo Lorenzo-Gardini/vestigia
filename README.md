@@ -19,6 +19,7 @@ not contribute to an answer.
   <a href="#features">Features</a> ·
   <a href="#installation-options">Install</a> ·
   <a href="#quick-start">Quick start</a> ·
+  <a href="#dashboard">Dashboard</a> ·
   <a href="#classification-statuses">Statuses</a> ·
   <a href="#development">Development</a>
 </p>
@@ -47,7 +48,8 @@ named `vestigia`. Choose the install that matches the integrations you need:
 | OpenAI with LangChain | `python -m pip install "vestigia[openai]"` | LangChain OpenAI integration |
 | TypeSafe with LangChain | `python -m pip install "vestigia[typesafe]"` | TypeSafe classifier and YAML prompt support |
 | Anthropic with LangChain | `python -m pip install "vestigia[anthropic]"` | LangChain Anthropic integration |
-| Everything | `python -m pip install "vestigia[all]"` | All optional integrations |
+| Dashboard | `python -m pip install "vestigia[dashboard]"` | Local Streamlit dashboard and all integrations |
+| Everything | `python -m pip install "vestigia[all]"` | All optional integrations, including the dashboard |
 
 There is no separate `langchain` extra: each optional extra installs its
 corresponding LangChain integration. With uv or Poetry, replace
@@ -174,6 +176,32 @@ result = ChatModelChunksClassificationResult(
     )
 )
 ```
+
+## Dashboard
+
+A local browser dashboard runs the classifiers without writing code. It
+installs every integration:
+
+```bash
+python -m pip install "vestigia[dashboard]"
+vestigia-dashboard
+```
+
+From a clone, run `uv run vestigia-dashboard`. The dashboard lets you:
+
+- choose an OpenAI-compatible, Anthropic, or TypeSafe model, with optional base
+  URL and temperature, so local servers such as LM Studio
+  (`http://localhost:1234/v1`) work too;
+- enter the input, output, and chunks, or import chunks from YAML or JSON as an
+  ID-to-text mapping, a list of `{id, text}`, or a list of strings; blank IDs
+  become `1`…`N` by position;
+- edit the prompt, including system-one criteria;
+- evaluate and review color-coded results per chunk;
+- export the experiment as YAML (model settings, prompt, inputs, chunks, and
+  results) and import it later to restore everything.
+
+API keys are read from the environment or entered in the session; they are
+never exported.
 
 ## Classification statuses
 
