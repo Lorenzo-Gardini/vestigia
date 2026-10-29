@@ -200,8 +200,35 @@ From a clone, run `uv run vestigia-dashboard`. The dashboard lets you:
 - export the experiment as YAML (model settings, prompt, inputs, chunks, and
   results) and import it later to restore everything.
 
-API keys are read from the environment or entered in the session; they are
-never exported.
+To explore the dashboard without a model, choose **Import** and load
+[`examples/dashboard-experiment.yaml`](https://github.com/Lorenzo-Gardini/vestigia/blob/main/examples/dashboard-experiment.yaml).
+It restores the setup and illustrative results shown below:
+
+<img src="https://raw.githubusercontent.com/Lorenzo-Gardini/vestigia/main/assets/dashboard-setup.png" alt="Dashboard Setup tab with an OpenAI-compatible qwen/qwen3.5-9b model, a question and answer about the Colosseum, and five chunks." width="100%">
+
+<img src="https://raw.githubusercontent.com/Lorenzo-Gardini/vestigia/main/assets/dashboard-results.png" alt="Dashboard Results tab showing five Colosseum chunks classified as used, partially used, not used, uncertain, and contradicted, each with an explanation." width="100%">
+
+### API keys
+
+Leave the **API key** field empty to use the provider's environment variable:
+
+| Provider | Environment variable |
+| --- | --- |
+| OpenAI-compatible | `OPENAI_API_KEY` |
+| Anthropic | `ANTHROPIC_API_KEY` |
+| TypeSafe | `TYPESAFE_API_KEY` |
+
+Set it in the shell that starts the dashboard:
+
+```bash
+export OPENAI_API_KEY="sk-..."
+vestigia-dashboard
+```
+
+A key typed into the field overrides the variable for the current browser
+session only and is never exported. Local OpenAI-compatible servers such as LM
+Studio ignore the key, but the client still requires one, so any placeholder
+works: `OPENAI_API_KEY=lm-studio vestigia-dashboard`.
 
 ## Classification statuses
 
