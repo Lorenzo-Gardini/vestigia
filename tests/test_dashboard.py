@@ -131,6 +131,17 @@ def test_import_accepts_unquoted_numeric_ids() -> None:
     assert list(ex.from_yaml(exported).chunks) == ["term", "2"]
 
 
+def test_readme_example_experiment_imports_with_results() -> None:
+    path = Path(__file__).parents[1] / "examples" / "dashboard-experiment.yaml"
+
+    experiment = ex.from_yaml(path.read_text(encoding="utf-8"))
+
+    assert experiment.evaluations.keys() == experiment.chunks.keys()
+    assert {evaluation.status for evaluation in experiment.evaluations.values()} == set(
+        ChunkStatus
+    )
+
+
 @pytest.mark.parametrize(
     "content",
     [
