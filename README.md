@@ -6,21 +6,20 @@ Classify how retrieved text supports, partially supports, contradicts, or does
 not contribute to an answer.
 
 <p>
-  <a href="https://github.com/Lorenzo-Gardini/vestigia/actions/workflows/tests.yml">
-    <img src="https://github.com/Lorenzo-Gardini/vestigia/actions/workflows/tests.yml/badge.svg?branch=main" alt="Tests">
-  </a>
   <a href="https://pypi.org/project/vestigia/">
-    <img src="https://img.shields.io/pypi/v/vestigia" alt="PyPI version">
+    <img src="https://img.shields.io/pypi/v/vestigia.svg?label=PyPI" alt="PyPI version">
   </a>
   <img src="https://img.shields.io/badge/python-3.12%2B-blue" alt="Python 3.12 or newer">
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-Apache--2.0-brightgreen.svg" alt="Apache-2.0 license">
+  </a>
 </p>
 
 <p>
   <a href="#features">Features</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#classification-statuses">Statuses</a> ·
-  <a href="#development">Development</a> ·
-  <a href="#releasing-to-pypi">Releases</a>
+  <a href="#development">Development</a>
 </p>
 
 </div>
@@ -287,61 +286,6 @@ It also builds distributions, validates their metadata and README, and checks
 imports and packaged resources from an isolated wheel installation.
 
 For architecture and contribution guidance, see [AGENTS.md](AGENTS.md).
-
-## Releasing to PyPI
-
-Publishing uses [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/):
-no PyPI API token needs to be stored in GitHub.
-
-### Publishing configuration
-
-Releases upload through the `pypi` GitHub environment in this repository's
-settings; configure required reviewers there for manual approval before an
-upload. The [vestigia PyPI project](https://pypi.org/manage/project/vestigia/settings/publishing/)
-trusts this GitHub publisher:
-
-| Setting | Value |
-| --- | --- |
-| PyPI project name | `vestigia` |
-| Owner | `Lorenzo-Gardini` |
-| Repository | `vestigia` |
-| Workflow filename | `publish.yml` |
-| Environment | `pypi` |
-
-Ensure the PyPI Trusted Publisher configuration uses the current repository,
-workflow, and environment values shown above.
-
-### Publish a version
-
-1. Update `project.version` in [pyproject.toml](pyproject.toml), run `uv lock`,
-   and commit the version and lockfile together.
-2. Verify the tests and packaging locally:
-
-   ```bash
-   uv run --locked --group dev --all-extras pytest
-   uv build --no-sources
-   uvx --from twine twine check --strict dist/*
-   ```
-
-   Use a clean `dist/` directory so old artifacts are not included.
-3. Merge the changes into the default branch and push them before releasing.
-4. Publish a GitHub Release targeting that commit, with a tag exactly matching
-   `v<project.version>` (for example, `v0.1.0`). Creating a tag alone or saving a
-   draft release does not publish to PyPI.
-5. The [publishing workflow](.github/workflows/publish.yml) checks the version,
-   runs all CI profiles, builds and validates the packages, then uploads those
-   same artifacts to PyPI after any environment approval.
-6. Confirm the new version on [PyPI](https://pypi.org/project/vestigia/) and
-   install it in a fresh virtual environment:
-
-   ```bash
-   python -m pip install "vestigia[openai]==0.1.0"
-   ```
-
-   Replace `0.1.0` with the version being verified.
-
-PyPI releases cannot be overwritten. For a corrected artifact, bump the version
-and publish a new release.
 
 ## License
 
