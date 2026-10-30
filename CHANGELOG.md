@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/Lorenzo-Gardini/vestigia/compare/v1.0.0...v1.1.0) (2026-10-30)
+
+
+### Features
+
+* accept partial dashboard run imports ([2739032](https://github.com/Lorenzo-Gardini/vestigia/commit/27390328ff1e6936e5e31b8060393be71cd388cf))
+
 ## [1.0.0](https://github.com/Lorenzo-Gardini/vestigia/compare/v0.1.0...v1.0.0) (2026-10-29)
 
 
