@@ -207,17 +207,18 @@ def _load_experiment() -> None:
         state.import_error = errors.describe_import_error(exc, "experiment")
         return
     state.import_error = None
-    state.provider = loaded.model.provider
-    state.model = loaded.model.model
-    state.base_url = loaded.model.base_url or ""
-    state.temperature = loaded.model.temperature
-    _set_prompt(loaded.prompt)
+    model = loaded.model
+    state.provider = model.provider if model else "openai"
+    state.model = model.model if model else ""
+    state.base_url = model.base_url or "" if model else ""
+    state.temperature = model.temperature if model else None
+    _set_prompt(loaded.prompt or ex.default_prompt(state.provider))
     state.input = loaded.input
     state.output = loaded.output
     _set_chunks(loaded.chunks.items())
-    state.result = loaded if loaded.evaluations else None
+    state.result = loaded
     state.error = None
-    state.tab = "Results" if loaded.evaluations else "Setup"
+    state.tab = "Results"
 
 
 def _load_chunks() -> None:
@@ -331,11 +332,11 @@ def _appbar(result: ex.Experiment | None) -> None:
     load, save = actions.columns(2)
     with load.popover("Import", width="stretch"):
         st.file_uploader(
-            "Experiment YAML",
-            type=["yaml", "yml"],
+            "Experiment YAML or JSON",
+            type=["yaml", "yml", "json"],
             key="experiment_file",
             on_change=_load_experiment,
-            help="Restores model settings, prompt, input, output, chunks, and results.",
+            help="Loads available run details and results; missing fields are allowed.",
         )
     save.download_button(
         "Export",
@@ -503,7 +504,7 @@ def _card(chunk_id: str, text: str, evaluation: ex.Evaluation, is_open: bool) ->
 
 def _render_results() -> None:
     result: ex.Experiment | None = state.result
-    if result is None:
+    if result is None or not result.evaluations:
         st.subheader("Results")
     else:
         _section_header(
@@ -512,10 +513,9 @@ def _render_results() -> None:
             lambda: state.update(results_open=False),
             "results",
         )
-    if result is None:
+    if result is None or not result.evaluations:
         st.html(
-            '<p class="v-empty">No evaluation yet. Add the input, the output, and '
-            "the chunks, then run Evaluate. Each chunk receives one status:</p>"
+            '<p class="v-empty">No classification results in this run.</p>'
             '<div class="v-key">'
             + "".join(
                 f"<span>{_badge(status)}</span><span>{meaning}</span>"
@@ -542,7 +542,12 @@ def _render_results() -> None:
         )
         + '</div><div class="v-cards">'
         + "".join(
-            _card(chunk_id, result.chunks[chunk_id], evaluation, state.results_open)
+            _card(
+                chunk_id,
+                result.chunks.get(chunk_id, ""),
+                evaluation,
+                state.results_open,
+            )
             for chunk_id, evaluation in sorted(
                 result.evaluations.items(),
                 key=lambda item: ex.natural_sort_key(item[0]),

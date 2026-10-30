@@ -130,7 +130,7 @@ class Evaluation(EvidenceModel):
 
 
 class Experiment(EvidenceModel):
-    """Everything needed to rerun a classification, plus its latest results.
+    """Optional run metadata and results for dashboard display.
 
     Examples
     --------
@@ -146,16 +146,18 @@ class Experiment(EvidenceModel):
     """
 
     version: Literal[1] = Field(default=1, description="Export format version.")
-    model: ModelConfig = Field(..., description="Classifier settings.")
-    prompt: ChatPrompt | SystemOneModelTemplate = Field(
-        ...,
+    model: ModelConfig | None = Field(
+        default=None,
+        description="Optional classifier settings.",
+    )
+    prompt: ChatPrompt | SystemOneModelTemplate | None = Field(
+        default=None,
         description="Chat template or system-one state, instruction, and criteria.",
     )
-    input: str = Field(..., description="User query given to the generating model.")
-    output: str = Field(..., description="Generated answer to attribute.")
+    input: str = Field(default="", description="User query given to the generating model.")
+    output: str = Field(default="", description="Generated answer to attribute.")
     chunks: dict[str, str] = Field(
-        ...,
-        min_length=1,
+        default_factory=dict,
         description="Source chunk text keyed by chunk ID, in input order.",
     )
     evaluations: dict[str, Evaluation] = Field(
@@ -173,11 +175,12 @@ class Experiment(EvidenceModel):
 
     @model_validator(mode="after")
     def _consistent(self) -> "Experiment":
-        is_chat = self.model.provider in CHAT_PROVIDERS
-        if is_chat != isinstance(self.prompt, ChatPrompt):
-            raise ValueError(f"Prompt type does not match provider {self.model.provider!r}")
-        if self.evaluations and self.evaluations.keys() != self.chunks.keys():
-            raise ValueError("Evaluation IDs must match chunk IDs exactly")
+        if self.model is not None and self.prompt is not None:
+            is_chat = self.model.provider in CHAT_PROVIDERS
+            if is_chat != isinstance(self.prompt, ChatPrompt):
+                raise ValueError(
+                    f"Prompt type does not match provider {self.model.provider!r}"
+                )
         return self
 
 
@@ -431,7 +434,7 @@ def to_yaml(experiment: Experiment) -> str:
 
 
 def from_yaml(content: str) -> Experiment:
-    """Parse and validate an exported experiment.
+    """Parse and validate a YAML or JSON dashboard run.
 
     Raises
     ------
@@ -446,4 +449,4 @@ def from_yaml(content: str) -> Experiment:
     ...
     pydantic_core._pydantic_core.ValidationError: ...
     """
-    return Experiment.model_validate(yaml.safe_load(content))
+    return Experiment.model_validate(yaml.safe_load(content) or {})

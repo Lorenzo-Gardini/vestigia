@@ -47,7 +47,15 @@ PROVIDER_NAMES: dict[Provider, str] = {
 }
 # Union members appear in Pydantic error locations but mean nothing to users.
 _HIDDEN_LOCATION_PARTS = {"ChatPrompt", "SystemOneModelTemplate"}
-_EXPERIMENT_SECTIONS = {"model", "prompt", "chunks"}
+_EXPERIMENT_FIELDS = {
+    "version",
+    "model",
+    "prompt",
+    "input",
+    "output",
+    "chunks",
+    "evaluations",
+}
 CHUNK_FORMAT_EXAMPLE = """```yaml
 intro: The first chunk's text.
 details: The second chunk's text.
@@ -338,8 +346,12 @@ def _is_not_an_experiment(errors: Iterable[Any]) -> bool:
     errors = list(errors)
     if any(error["type"] == "model_type" and not error["loc"] for error in errors):
         return True
-    missing = {error["loc"][0] for error in errors if error["type"] == "missing"}
-    return _EXPERIMENT_SECTIONS <= missing
+    return bool(errors) and all(
+        error["type"] == "extra_forbidden"
+        and error["loc"]
+        and error["loc"][0] not in _EXPERIMENT_FIELDS
+        for error in errors
+    )
 
 
 def _field_problems(errors: Iterable[Any]) -> list[str]:

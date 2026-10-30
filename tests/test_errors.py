@@ -198,7 +198,6 @@ def test_setup_errors_before_a_call(exc: Exception, title: str, message: str) ->
         ("model: [unclosed", "Not a valid YAML file", "line 1, column 17"),
         ("not: an experiment", "Not a Vestigia experiment", "Export an experiment"),
         ("- a list", "Not a Vestigia experiment", "Export an experiment"),
-        ("", "Not a Vestigia experiment", "Export an experiment"),
         (
             _experiment_yaml().replace("version: 1", "version: 2"),
             "Unsupported file version",
