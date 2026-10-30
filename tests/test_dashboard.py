@@ -131,6 +131,30 @@ def test_import_accepts_unquoted_numeric_ids() -> None:
     assert list(ex.from_yaml(exported).chunks) == ["term", "2"]
 
 
+def test_import_accepts_partial_json_run_without_chunks_or_model() -> None:
+    experiment = ex.from_yaml(
+        '{"input":"Question?","output":"Answer.",'
+        '"evaluations":{"source-1":{"status":"used"}}}'
+    )
+
+    assert experiment.model is None
+    assert experiment.prompt is None
+    assert experiment.chunks == {}
+    assert experiment.evaluations["source-1"].status is ChunkStatus.USED
+
+
+@pytest.mark.parametrize("content", ["", "{}", "null"])
+def test_import_accepts_empty_run(content: str) -> None:
+    experiment = ex.from_yaml(content)
+
+    assert experiment.input == ""
+    assert experiment.output == ""
+    assert experiment.model is None
+    assert experiment.prompt is None
+    assert experiment.chunks == {}
+    assert experiment.evaluations == {}
+
+
 def test_readme_example_experiment_imports_with_results() -> None:
     path = Path(__file__).parents[1] / "examples" / "dashboard-experiment.yaml"
 
@@ -149,10 +173,6 @@ def test_readme_example_experiment_imports_with_results() -> None:
         "not: an experiment",
         ex.to_yaml(_experiment()).replace("provider: openai", "provider: typesafe"),
         ex.to_yaml(_experiment()).replace("provider: openai", "provider: other"),
-        yaml.safe_dump(
-            _experiment().model_dump(mode="json")
-            | {"evaluations": {"term": {"status": "used"}}}
-        ),
         ex.to_yaml(
             _experiment(
                 evaluations={
